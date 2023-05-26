@@ -1,0 +1,6 @@
+paramiko
+opencv-python==4.1.0.25
+tensorflow==1.9
+imutils
+paho-mqtt
+scp
