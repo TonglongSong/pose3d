@@ -41,9 +41,6 @@ def findrootdepth(bbox, focal, original_img, model):
     bbox_list = bbox  # xmin, ymin, width, height
     person_num = len(bbox_list)
 
-    # normalized camera intrinsics
-    princpt = [original_img_width / 2, original_img_height / 2]  # x-axis, y-axis
-
     # for cropped and resized human image, forward it to RootNet
     output = []
     for n in range(person_num):
