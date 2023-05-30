@@ -1,20 +1,21 @@
 # By Tonglong Song 2022/6/8 17:57
-import paramiko
 from scp import SCPClient
 from my_utils import gettime, dt_connect
 import os
 import timeit
 import time
 from PIL import Image
+from config import DT_IMGPATH
 
 
+# posting image that is saved by frame_saver to dt cloud server
 def postimg():
     c = dt_connect()
     lastpost = 0
     while True:
         t = gettime()-10
         if lastpost != t:
-            if True:
+            if c.get_transport().is_alive():
                 fname = f"3dpose/frames/{t}.jpg"
                 if os.path.exists(fname):
                     try:
@@ -22,9 +23,9 @@ def postimg():
                         image = Image.open(fname)
                         image.save(fname, quality=70, optimize=True)
                         with SCPClient(c.get_transport()) as scp:
-                            scp.put(f"3dpose/frames/{t}.jpg", '/home/ubuntu/posecapture/tempdata/cam0/')
+                            scp.put(f"3dpose/frames/{t}.jpg", DT_IMGPATH)
                         stop = timeit.default_timer()
-                        print(f"{t}.jpg posted in {stop - start} second" )
+                        print(f"{t}.jpg posted in {stop - start} second")
                         lastpost = t
                     except Exception as e:
                         print(e)
@@ -41,5 +42,7 @@ def postimg():
         else:
             time.sleep(0.1)
 
-time.sleep(5)
-postimg()
+
+if __name__ == "__main__":
+    time.sleep(5)
+    postimg()

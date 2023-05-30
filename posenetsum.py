@@ -1,7 +1,6 @@
 import json
 import os.path as osp
 import numpy as np
-import cv2
 import torch
 import torchvision.transforms as transforms
 from torch.nn.parallel.data_parallel import DataParallel
@@ -11,9 +10,9 @@ from posenet.main.config import cfg
 from posenet.main.model import get_pose_net
 from posenet.data.dataset import generate_patch_image
 from posenet.common.utils.pose_utils import process_bbox, pixel2cam
-from posenet.common.utils.vis import vis_keypoints, vis_3d_multiple_skeleton
 from datetime import datetime
 import utm
+import math
 
 
 def timestring():
@@ -21,9 +20,24 @@ def timestring():
     return now.strftime("%Y-%m-%d'T'%H:%M:%SZZZZ")
 
 
-def cordtransfer(origin, x, y):
-    utmcoord = utm.project(origin)
-    return utm.unproject(utmcoord[0], utmcoord[1], utmcoord[2] + x / 1000, utmcoord[3] + y / 1000)
+def rotate(origin, point, angle):
+    """
+    Rotate a point counterclockwise by a given angle around a given origin.
+
+    The angle should be given in radians.
+    """
+    ox, oy = origin
+    px, py = point
+
+    qx = ox + math.cos(angle) * (px - ox) - math.sin(angle) * (py - oy)
+    qy = oy + math.sin(angle) * (px - ox) + math.cos(angle) * (py - oy)
+    return qx, qy
+
+
+def cordtransfer(origin, x, y, angle):
+    #utmcoord = utm.project(origin)
+    qx, qy = rotate((0, 0), (x, y), angle)
+    return utm.unproject(origin[0], origin[1], origin[2] + qx / 1000, origin[3] + qy / 1000)
 
 
 def print_json(keypoints):
@@ -41,18 +55,17 @@ def print_json(keypoints):
     return json.dumps(pload)
 
 
-def coordtransform(pose3d, Rvec, Tvec):
+def coordtransform(pose3d, Rvec, Tvec, angle, origin):
     out = np.ones_like(pose3d)
     out = out.astype(np.float64)
-    origin = (144.965170, -37.800424)
     for i in range(len(pose3d)):
         for j in range(len(pose3d[i])):
             joint = pose3d[i][j]
             mat = np.matrix(np.array([[joint[0]], [joint[1]], [joint[2]]], dtype=np.float32))
             new = Rvec ** -1 * (mat - Tvec)
             new = new.transpose().A1
-            lon, lat = cordtransfer(origin, new[0], new[1])
-            out[i][j] = [lon, lat, new[2]/1000]
+            lon, lat = cordtransfer(origin, new[0], new[1], angle)
+            out[i][j] = [lon, lat, new[2]/1000-11]
     return out
 
 
@@ -76,7 +89,7 @@ def load_posenet_data():
     return model
 
 
-def human_3d_detection(bbox, depth_list, focal, original_img, model, R, T):
+def human_3d_detection(bbox, depth_list, focal, original_img, model, R, T, angle, origin):
     # MuCo joint set
     joint_num = 21
     joints_name = (
@@ -128,11 +141,11 @@ def human_3d_detection(bbox, depth_list, focal, original_img, model, R, T):
         pose_3d = pixel2cam(pose_3d, focal, princpt)
         output_pose_3d_list.append(pose_3d.copy())
 
-    # visualize 3d poses
+    # transform 3d poses
     Rvec = np.matrix(R)
     Tvec = np.matrix(T)
     vis_kps = np.array(output_pose_3d_list)
-    vis_kps = coordtransform(vis_kps, Rvec, Tvec)
+    vis_kps = coordtransform(vis_kps, Rvec, Tvec, angle, origin)
     #vis_3d_multiple_skeleton(vis_kps, np.ones_like(vis_kps), skeleton, original_img, filename=timestring())
     return print_json(vis_kps)
 

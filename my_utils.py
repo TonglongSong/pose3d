@@ -1,14 +1,15 @@
 import time
 import os
 import paramiko
+from config import DT_HOSTNAME, DT_USERNAME, DT_KEYFILEPATH
 
 
 def dt_connect():
-    k = paramiko.RSAKey.from_private_key_file("app1server.pem")
+    k = paramiko.RSAKey.from_private_key_file(DT_KEYFILEPATH)
     c = paramiko.SSHClient()
     c.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     print("connecting")
-    c.connect(hostname="115.146.94.74", username="ubuntu", pkey=k)
+    c.connect(hostname=DT_HOSTNAME, username=DT_USERNAME, pkey=k)
     print("connected")
     return c
 
@@ -36,3 +37,4 @@ def clean_history(t, directory):
     for i in intlst:
         if os.path.exists(f"{directory}/{i}.jpg"):
             os.remove(f"{directory}/{i}.jpg")
+

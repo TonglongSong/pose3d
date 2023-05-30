@@ -27,7 +27,8 @@ def clean_history(t, directory):
             os.remove(f"{directory}/{i}.jpg")
 
 
-current_path = os.getcwd()
-while True:
-    clean_history(300, current_path)
-    time.sleep(300)
+if __name__ == '__main__':
+    current_path = os.getcwd()
+    while True:
+        clean_history(300, current_path)
+        time.sleep(300)

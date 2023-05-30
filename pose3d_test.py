@@ -8,7 +8,7 @@ import os
 import numpy as np
 import cv2
 from my_utils import gettime
-from camera_parameters import get_cam_parameter
+from config import get_cam_parameter
 from argparse import ArgumentParser
 import json
 import os.path as osp
@@ -133,7 +133,6 @@ def pose3d(net, classes, rootnet, posenet):
             if os.path.exists(img_path):
                 start = timeit.default_timer()
                 image = undistort(img_path)
-                #image = cv2.imread(img_path)
                 pload = combined(image, net, classes, rootnet, posenet)
                 stop = timeit.default_timer()
                 print(pload)
@@ -149,8 +148,6 @@ def pose3d(net, classes, rootnet, posenet):
 if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument(
-        '--camera', type=int, default=0, help='which camera parameter to be used')
-    parser.add_argument(
         '--focal', type=int, default=900, help='focal length')
     args = parser.parse_args()
 
@@ -160,8 +157,7 @@ if __name__ == "__main__":
     classes, net = load_yolo()
 
     # load camera parameters
-    DIM = (1920, 1080)
-    K, D, Rvec, Tvec = get_cam_parameter(args.camera)
+    K, D, Rvec, Tvec, DIM = get_cam_parameter()
     # start loop
     image = undistort("frames/cam0/123.jpg")
     combined(image, net, classes, rootnet_model, posenet_model)

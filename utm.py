@@ -24,6 +24,11 @@ def letter(coordinates):
     return 'CDEFGHJKLMNPQRSTUVWXX'[int((coordinates[1] + 80) / 8)]
 
 
+# input coordinate in WGS84 form, output:
+# z: zone number
+# l: zone letter
+# x, y: projected x and y coordinate in local axis, in meters
+#
 def project(coordinates):
     z = zone(coordinates)
     l = letter(coordinates)
@@ -35,6 +40,7 @@ def project(coordinates):
     return z, l, x, y
 
 
+# input zone, zone letter, x and y coordinate in local axis, output WGS84 coordinates
 def unproject(z, l, x, y):
     if z not in _projections:
         _projections[z] = pyproj.Proj(proj='utm', zone=z, ellps='WGS84')
@@ -42,5 +48,7 @@ def unproject(z, l, x, y):
         y -= 10000000
     lng, lat = _projections[z](x, y, inverse=True)
     return lng, lat
+
+
 
 
