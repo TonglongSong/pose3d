@@ -4,3 +4,4 @@ tensorflow==1.9
 imutils
 paho-mqtt
 scp
+psycopg2

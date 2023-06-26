@@ -65,7 +65,7 @@ def coordtransform(pose3d, Rvec, Tvec, angle, origin):
             new = Rvec ** -1 * (mat - Tvec)
             new = new.transpose().A1
             lon, lat = cordtransfer(origin, new[0], new[1], angle)
-            out[i][j] = [lon, lat, new[2]/1000-11]
+            out[i][j] = [lon, lat, new[2]/1000]
     return out
 
 

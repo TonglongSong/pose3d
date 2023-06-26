@@ -12,6 +12,11 @@ DT_MQTT_KEYFILEPATH = 'isrgrootx1.pem'
 DT_MQTT_TOPIC = 'uom/parkville/melbourneconnect/level6/csdila/3dpose/humanSkeleton'
 DT_MQTT_PORT = 8883
 
+DT_SQLCONNECTION = "postgres://postgres:dtDBAdmin2021@45.113.235.78:5432/realtime_db"
+DT_SQL = """INSERT INTO pose3d_history(epoch_time, location, json)
+             VALUES(%s, %s, %s);"""
+DT_SQL_LOCATION = "D_LAB"
+
 ORIGIN_WGS84 = (144.964506, -37.800165)
 REFERENCE_WGS84 = (144.964444, -37.800127)
 REFERENCE_LOCAL = (0, 7)

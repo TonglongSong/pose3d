@@ -6,10 +6,11 @@ import timeit
 import paho.mqtt.client as mqtt
 import os
 import cv2
+import psycopg2
 from my_utils import gettime
 from config import get_cam_parameter
 from argparse import ArgumentParser
-from config import DT_MQTT_HOST, DT_MQTT_TOPIC, DT_MQTT_USERNAME, DT_MQTT_PASSWORD, DT_MQTT_KEYFILEPATH, DT_MQTT_PORT, ORIGIN_WGS84, REFERENCE_LOCAL, REFERENCE_WGS84
+from config import DT_MQTT_HOST, DT_MQTT_TOPIC, DT_MQTT_USERNAME, DT_MQTT_PASSWORD, DT_MQTT_KEYFILEPATH, DT_MQTT_PORT, ORIGIN_WGS84, REFERENCE_LOCAL, REFERENCE_WGS84, DT_SQL, DT_SQL_LOCATION, DT_SQLCONNECTION
 import numpy as np
 from utm import project
 
@@ -30,9 +31,15 @@ def pose3d(net, classes, rootnet, posenet):
             img_path = f"frames/{t}.jpg"
             if os.path.exists(img_path):
                 start = timeit.default_timer()
+                conn = psycopg2.connect(DT_SQLCONNECTION)
+                cursor = conn.cursor()
                 image = cv2.imread(img_path)
                 pload = combined(image, net, classes, rootnet, posenet)
+                sqldata = (t/10, DT_SQL_LOCATION, pload)
                 client.publish(topicstr, payload=pload, qos=0, retain=False)
+                cursor.execute(DT_SQL, sqldata)
+                conn.commit()
+                cursor.close()
                 stop = timeit.default_timer()
                 print(f"skeleton {t} published in {stop - start} second")
                 lastimg = t
